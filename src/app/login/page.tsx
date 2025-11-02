@@ -1,56 +1,65 @@
-'use client';
-import { supabase } from '@/lib/supabase';
-import { useState } from 'react';
+"use client";
+
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const sendMagicLink = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
+    setError("");
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
-
-    setBusy(false);
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert(error.message);
+      setError(error.message);
     } else {
-      alert('Check your email for the sign-in link.');
+      router.push("/dashboard");
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    alert('Signed out');
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setError(error.message);
+    } else {
+      alert("Check your email to confirm your account!");
+    }
   };
 
   return (
-    <main className="p-6 max-w-sm mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">Sign in</h1>
-
-      <form onSubmit={sendMagicLink} className="space-y-2">
+    <main className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-3xl font-bold mb-4">Login to ToGather</h1>
+      <form onSubmit={handleLogin} className="flex flex-col gap-2 w-64">
         <input
           type="email"
-          required
-          placeholder="you@email.com"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-2 rounded"
+          className="border rounded p-2"
         />
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full p-2 rounded bg-black text-white"
-        >
-          {busy ? 'Sending...' : 'Send magic link'}
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border rounded p-2"
+        />
+        <button type="submit" className="bg-blue-600 text-white rounded p-2 mt-2">
+          Log in
         </button>
       </form>
-
-      <button onClick={signOut} className="w-full p-2 rounded border">
-        Sign out
+      <button onClick={handleSignup} className="text-sm text-blue-500 mt-4">
+        Sign up instead
       </button>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
     </main>
   );
 }
